@@ -2,7 +2,7 @@
 
 输入体重,推荐 Trek Emonda(及任意公路车)的前后轮合适胎压。基于经典的 **15% 轮胎落差法(Frank Berto tire-drop)**,给出一个有依据的起始参考值。
 
-**在线使用:** https://mrfeixiang.github.io/emonda-tire-pressure/
+**在线使用:** https://mrfeixiang.github.io/club100-taiya
 
 > 单文件、纯前端、无依赖、离线可用。把 `index.html` 双击即可本地打开。
 
