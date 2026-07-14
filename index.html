@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emonda 胎压顾问 · 输入体重推荐胎压</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Source+Sans+3:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBF8F3;
+    --card:#FFFFFF;
+    --ink:#2A2724;
+    --muted:#6B655E;
+    --line:#E7E0D6;
+    --front:#3E6E8E;   /* 前轮 · 钢蓝 */
+    --rear:#B4442F;    /* 后轮 · Trek 红 */
+    --amber:#B07A12;   /* 提示 */
+    --emerald:#2F7D5B; /* 说明 */
+    --shadow:0 2px 4px rgba(42,39,36,.04),0 8px 24px rgba(42,39,36,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    line-height:1.6;padding:32px 20px 64px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto}
+
+  header{margin-bottom:28px}
+  .kicker{
+    font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--rear);font-weight:500;margin-bottom:8px;
+  }
+  h1{font-family:"DM Serif Display",Georgia,serif;font-size:38px;line-height:1.15;font-weight:400;margin-bottom:10px}
+  .sub{color:var(--muted);font-size:16px;max-width:620px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+
+  .card{
+    background:var(--card);border-radius:12px;padding:24px;box-shadow:var(--shadow);
+    border-left:4px solid var(--line);
+  }
+  .card.input{border-left-color:var(--ink)}
+  .card h2{
+    font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:18px;
+  }
+
+  /* 体重 hero */
+  .weight-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+  .weight-label{font-size:15px;font-weight:600}
+  .weight-val{font-family:"IBM Plex Mono",monospace;font-size:26px;font-weight:600}
+  .weight-val small{font-size:14px;color:var(--muted);font-weight:400}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;
+    background:linear-gradient(90deg,var(--rear) 0%,var(--rear) var(--fill,40%),var(--line) var(--fill,40%),var(--line) 100%);
+    outline:none;margin:10px 0 4px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;
+    background:#fff;border:3px solid var(--rear);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2);
+    transition:transform .1s;
+  }
+  input[type=range]::-webkit-slider-thumb:active{transform:scale(1.15)}
+  input[type=range]::-moz-range-thumb{
+    width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--rear);
+    cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2);
+  }
+  .range-ends{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted)}
+
+  .field{margin-top:22px}
+  .field-label{font-size:14px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .field-note{font-size:12px;color:var(--muted);font-weight:400}
+
+  .seg{display:flex;flex-wrap:wrap;gap:6px}
+  .seg button{
+    font-family:"Source Sans 3",sans-serif;font-size:14px;padding:8px 14px;border-radius:8px;
+    border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;transition:all .15s;
+    font-weight:500;
+  }
+  .seg button:hover{border-color:var(--muted)}
+  .seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  details.adv{margin-top:22px;border-top:1px solid var(--line);padding-top:14px}
+  details.adv summary{
+    cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;list-style:none;
+    font-family:"IBM Plex Mono",monospace;letter-spacing:.03em;
+  }
+  details.adv summary::-webkit-details-marker{display:none}
+  details.adv summary::before{content:"+ ";color:var(--rear)}
+  details.adv[open] summary::before{content:"– "}
+  .adv-body{margin-top:14px}
+  .num-row{display:flex;align-items:center;justify-content:space-between;font-size:14px}
+  .num-row input[type=number]{
+    width:80px;font-family:"IBM Plex Mono",monospace;font-size:15px;padding:6px 8px;
+    border:1px solid var(--line);border-radius:6px;text-align:right;
+  }
+
+  /* 结果 */
+  .card.result{border-left-color:var(--rear)}
+  .wheels{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:420px){.wheels{grid-template-columns:1fr}}
+  .wheel{padding:16px;border-radius:10px;background:#FCFAF6;border:1px solid var(--line)}
+  .wheel .tag{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    font-weight:600;margin-bottom:6px;
+  }
+  .wheel.front .tag{color:var(--front)}
+  .wheel.rear .tag{color:var(--rear)}
+  .psi{font-family:"IBM Plex Mono",monospace;font-size:40px;font-weight:600;line-height:1}
+  .psi small{font-size:15px;color:var(--muted);font-weight:400}
+  .bar-val{font-family:"IBM Plex Mono",monospace;font-size:15px;color:var(--muted);margin-top:2px}
+  .range-line{font-size:12px;color:var(--muted);margin-top:8px;font-family:"IBM Plex Mono",monospace}
+
+  .gauge{height:6px;border-radius:6px;background:linear-gradient(90deg,#9fc0d6,#e9d9a0,#d99a8a);
+    margin-top:12px;position:relative}
+  .gauge .mark{position:absolute;top:-4px;width:3px;height:14px;border-radius:2px;background:var(--ink);
+    transform:translateX(-50%);transition:left .3s cubic-bezier(.4,0,.2,1)}
+  .gauge-ends{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--muted);margin-top:3px}
+
+  .meta{margin-top:18px;font-size:13px;color:var(--muted);line-height:1.7}
+  .meta b{color:var(--ink);font-weight:600;font-family:"IBM Plex Mono",monospace}
+
+  .warn{margin-top:14px;padding:12px 14px;border-radius:8px;background:#FBF3E2;
+    border-left:3px solid var(--amber);font-size:13px;color:#6b5416;display:none}
+  .warn.show{display:block}
+  .warn p{margin:2px 0}
+
+  /* 说明 */
+  .explain{margin-top:22px}
+  .explain.card{border-left-color:var(--emerald)}
+  .explain h3{font-family:"DM Serif Display",serif;font-size:22px;font-weight:400;margin-bottom:6px}
+  .explain p{font-size:14px;color:var(--ink);margin-bottom:10px}
+  .explain ul{margin:0 0 10px 18px;font-size:14px;color:var(--ink)}
+  .explain li{margin-bottom:5px}
+  .explain code{font-family:"IBM Plex Mono",monospace;font-size:13px;background:#F2ECE1;padding:1px 5px;border-radius:4px}
+  .disc{font-size:12px;color:var(--muted);margin-top:16px;line-height:1.7}
+
+  footer{margin-top:32px;font-size:12px;color:var(--muted);text-align:center;
+    font-family:"IBM Plex Mono",monospace;letter-spacing:.03em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Trek Emonda · Tire Pressure Advisor</div>
+    <h1>输入体重，推荐胎压</h1>
+    <p class="sub">基于经典的 15% 轮胎落差法(Frank Berto tire-drop),把体重换算成前后轮的合适起始胎压。这是一个有依据的起点,不是唯一正确答案——最终请用手感在 ±3psi 内微调。</p>
+  </header>
+
+  <div class="grid">
+    <!-- 输入 -->
+    <div class="card input">
+      <h2>骑手与器材</h2>
+
+      <div class="weight-head">
+        <span class="weight-label">体重</span>
+        <span class="weight-val"><span id="wDisp">70</span><small> kg</small></span>
+      </div>
+      <input type="range" id="weight" min="40" max="130" step="1" value="70">
+      <div class="range-ends"><span>40</span><span>130</span></div>
+
+      <div class="field">
+        <div class="field-label">轮胎宽度 <span class="field-note">Emonda 现款官方上限约 28mm,部分实测可上 30–32</span></div>
+        <div class="seg" id="width">
+          <button data-v="23">23c</button>
+          <button data-v="25">25c</button>
+          <button data-v="28" class="on">28c</button>
+          <button data-v="30">30c</button>
+          <button data-v="32">32c</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">内胎类型</div>
+        <div class="seg" id="tube">
+          <button data-v="clincher" class="on">开口胎(有内胎)</button>
+          <button data-v="tubeless">真空胎 Tubeless</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">路面状况</div>
+        <div class="seg" id="surface">
+          <button data-v="smooth">光滑柏油</button>
+          <button data-v="mixed" class="on">一般路面</button>
+          <button data-v="rough">粗糙/破损</button>
+        </div>
+      </div>
+
+      <details class="adv">
+        <summary>进阶设置</summary>
+        <div class="adv-body">
+          <div class="num-row">
+            <span>整车 + 装备重量 <span class="field-note">Emonda 约 7–8.5kg,含水壶码表</span></span>
+            <input type="number" id="bike" min="6" max="16" step="0.1" value="8.5">
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- 结果 -->
+    <div class="card result">
+      <h2>推荐胎压 · 起始参考</h2>
+      <div class="wheels">
+        <div class="wheel front">
+          <div class="tag">前轮 Front</div>
+          <div class="psi"><span id="fPsi">55</span><small> psi</small></div>
+          <div class="bar-val"><span id="fBar">3.8</span> bar</div>
+          <div class="gauge"><div class="mark" id="fMark" style="left:40%"></div></div>
+          <div class="gauge-ends"><span>30</span><span>110</span></div>
+          <div class="range-line">范围 <span id="fRange">52–58</span></div>
+        </div>
+        <div class="wheel rear">
+          <div class="tag">后轮 Rear</div>
+          <div class="psi"><span id="rPsi">61</span><small> psi</small></div>
+          <div class="bar-val"><span id="rBar">4.2</span> bar</div>
+          <div class="gauge"><div class="mark" id="rMark" style="left:48%"></div></div>
+          <div class="gauge-ends"><span>30</span><span>110</span></div>
+          <div class="range-line">范围 <span id="rRange">58–64</span></div>
+        </div>
+      </div>
+
+      <div class="meta">
+        系统总重 <b id="sysW">78.5</b> kg &nbsp;·&nbsp; 前轮负重 <b id="fLoad">35.3</b> kg &nbsp;·&nbsp; 后轮负重 <b id="rLoad">43.2</b> kg<br>
+        假设前后配重 45 / 55,后轮更高属正常。
+      </div>
+
+      <div class="warn" id="warn"></div>
+    </div>
+  </div>
+
+  <!-- 方法说明 -->
+  <div class="card explain">
+    <h3>它是怎么算的</h3>
+    <p>核心思路是让轮胎在你的重量下压缩约 <strong>15% 直径</strong>——这个落差下滚动阻力和舒适度接近最优。经典的 Berto 图表把"每轮负重"和"胎压"对应起来,我把它标定成了一个连续公式:</p>
+    <p><code>胎压(psi) ≈ C(胎宽) × √(每轮负重kg) × 路面系数 × 内胎系数</code></p>
+    <ul>
+      <li><strong>系统重量</strong>:体重 + 整车装备,再按 45/55 分到前后轮。后轮负重大,所以胎压更高。</li>
+      <li><strong>胎宽</strong>:越宽气室越大,同重量下所需气压越低,按 <code>width⁻¹·⁷</code> 缩放。这也是为什么换宽胎能明显降压。</li>
+      <li><strong>真空胎 −10%</strong>:没有内胎,不怕蛇咬破,可以更低,滚阻和抓地更好。</li>
+      <li><strong>路面</strong>:越粗糙越该降压。低压能吸收颠簸、减少"阻抗损失",在烂路上反而更快。</li>
+    </ul>
+    <p class="disc">
+      <strong>请注意:</strong>这是<strong>起点</strong>不是定论。真正的最优压值要靠试:从推荐值出发,每次 ±3psi 找那个"贴地却不肉"的手感。<br>
+      永远不要超过轮胎侧壁和轮圈标注的最大/最小气压。真空胎压太低会脱圈(burping),有内胎压太低会蛇咬破胎。宽胎/低压是现代趋势,但请以你的器材额定值为准。
+    </p>
+  </div>
+
+  <footer>15% tire-drop method · 结果为起始参考值,请结合手感与器材额定值调整</footer>
+</div>
+
+<script>
+(function(){
+  var state = { weight:70, bike:8.5, width:28, tube:'clincher', surface:'mixed' };
+
+  var C25 = 11.87;          // 25mm 开口胎 光滑路 的标定常数
+  var WIDTH_EXP = 1.7;      // 胎宽缩放指数
+  var FRONT = 0.45, REAR = 0.55;
+
+  function surfaceFactor(s){ return s==='smooth'?1.0 : s==='rough'?0.90 : 0.95; }
+  function tubeFactor(t){ return t==='tubeless'?0.90 : 1.0; }
+
+  function calc(){
+    var sys = state.weight + state.bike;
+    var fLoad = sys*FRONT, rLoad = sys*REAR;
+    var Cw = C25 * Math.pow(25/state.width, WIDTH_EXP);
+    var f = surfaceFactor(state.surface)*tubeFactor(state.tube);
+    var front = Cw*Math.sqrt(fLoad)*f;
+    var rear  = Cw*Math.sqrt(rLoad)*f;
+    return {sys:sys, fLoad:fLoad, rLoad:rLoad, front:front, rear:rear};
+  }
+
+  function gaugePct(psi){
+    var p = (psi-30)/(110-30)*100;
+    return Math.max(2, Math.min(98, p));
+  }
+
+  function render(){
+    var r = calc();
+    var fPsi = Math.round(r.front), rPsi = Math.round(r.rear);
+
+    document.getElementById('wDisp').textContent = state.weight;
+    document.getElementById('fPsi').textContent = fPsi;
+    document.getElementById('rPsi').textContent = rPsi;
+    document.getElementById('fBar').textContent = (r.front/14.5038).toFixed(1);
+    document.getElementById('rBar').textContent = (r.rear/14.5038).toFixed(1);
+    document.getElementById('fRange').textContent = Math.round(fPsi*0.95)+'–'+Math.round(fPsi*1.05);
+    document.getElementById('rRange').textContent = Math.round(rPsi*0.95)+'–'+Math.round(rPsi*1.05);
+    document.getElementById('fMark').style.left = gaugePct(fPsi)+'%';
+    document.getElementById('rMark').style.left = gaugePct(rPsi)+'%';
+    document.getElementById('sysW').textContent = r.sys.toFixed(1);
+    document.getElementById('fLoad').textContent = r.fLoad.toFixed(1);
+    document.getElementById('rLoad').textContent = r.rLoad.toFixed(1);
+
+    // slider fill
+    var sl = document.getElementById('weight');
+    var pct = (state.weight-40)/(130-40)*100;
+    sl.style.setProperty('--fill', pct+'%');
+
+    // 提示
+    var msgs = [];
+    if(state.tube==='clincher' && fPsi<52){
+      msgs.push('前轮压较低,有内胎时注意蛇咬破胎风险;可考虑换真空胎或更宽的胎。');
+    }
+    if(state.tube==='tubeless' && fPsi<40){
+      msgs.push('真空胎压偏低,快速过弯或撞击时可能脱圈漏气(burping),酌情上调。');
+    }
+    if(rPsi>95){
+      msgs.push('后轮压偏高,请核对轮胎/轮圈的最大额定气压;现代宽胎通常无需这么高。');
+    }
+    if(state.width>=30 && state.surface==='smooth'){
+      msgs.push('宽胎跑光滑路时可略微上调,避免过软带来的"发肉"晃动感。');
+    }
+    var w = document.getElementById('warn');
+    if(msgs.length){ w.className='warn show'; w.innerHTML = msgs.map(function(m){return '<p>· '+m+'</p>';}).join(''); }
+    else{ w.className='warn'; w.innerHTML=''; }
+  }
+
+  // 事件
+  document.getElementById('weight').addEventListener('input', function(e){ state.weight=+e.target.value; render(); });
+  document.getElementById('bike').addEventListener('input', function(e){
+    var v=+e.target.value; if(isNaN(v)) return; state.bike=v; render();
+  });
+  function bindSeg(id, key, numeric){
+    var box=document.getElementById(id);
+    box.addEventListener('click', function(e){
+      var b=e.target.closest('button'); if(!b) return;
+      [].forEach.call(box.querySelectorAll('button'),function(x){x.classList.remove('on')});
+      b.classList.add('on');
+      state[key]= numeric ? +b.dataset.v : b.dataset.v;
+      render();
+    });
+  }
+  bindSeg('width','width',true);
+  bindSeg('tube','tube',false);
+  bindSeg('surface','surface',false);
+
+  render();
+})();
+</script>
+</body>
+</html>
